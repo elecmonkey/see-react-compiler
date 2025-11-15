@@ -8,8 +8,10 @@ type Props = {
 
 const EditorPane = ({ value, onChange, language = 'tsx' }: Props) => {
   const [html, setHtml] = useState('');
+  const [lines, setLines] = useState<number>(1);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   const preRef = useRef<HTMLDivElement | null>(null);
+  const gutterRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let timer: number | null = null;
@@ -31,12 +33,18 @@ const EditorPane = ({ value, onChange, language = 'tsx' }: Props) => {
   }, [value, language]);
 
   useEffect(() => {
+    setLines((value || '').split('\n').length || 1);
+  }, [value]);
+
+  useEffect(() => {
     const ta = taRef.current;
     const pre = preRef.current;
-    if (!ta || !pre) return;
+    const gut = gutterRef.current;
+    if (!ta || !pre || !gut) return;
     const onScroll = () => {
       pre.scrollTop = ta.scrollTop;
       pre.scrollLeft = ta.scrollLeft;
+      gut.scrollTop = ta.scrollTop;
     };
     ta.addEventListener('scroll', onScroll);
     return () => {
@@ -47,14 +55,24 @@ const EditorPane = ({ value, onChange, language = 'tsx' }: Props) => {
   return (
     <div className="relative w-full h-full">
       <div
+        ref={gutterRef}
+        className="absolute inset-y-0 left-0 overflow-hidden pointer-events-none select-none text-right font-mono text-[13px] leading-[1.6]"
+        style={{ width: 48, paddingTop: 12, paddingLeft: 12, paddingRight: 8 }}
+      >
+        {Array.from({ length: lines }).map((_, i) => (
+          <div key={i}>{i + 1}</div>
+        ))}
+      </div>
+      <div
         ref={preRef}
-        className="absolute inset-0 overflow-auto pointer-events-none editor-overlay p-3 font-mono text-[13px] leading-[1.6]"
+        className="absolute inset-0 overflow-auto pointer-events-none editor-overlay font-mono text-[13px] leading-[1.6]"
+        style={{ padding: 12, paddingLeft: 60 }}
       >
         <div dangerouslySetInnerHTML={{ __html: html }} />
       </div>
       <textarea
         ref={taRef}
-        className="absolute inset-0 w-full h-full resize-none outline-none p-3 font-mono text-[13px] leading-[1.6] bg-transparent caret-blue-600 text-transparent"
+        className="absolute inset-0 w-full h-full resize-none outline-none font-mono text-[13px] leading-[1.6] bg-transparent caret-blue-600 text-transparent"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         wrap="off"
@@ -62,7 +80,7 @@ const EditorPane = ({ value, onChange, language = 'tsx' }: Props) => {
         autoCorrect="off"
         autoCapitalize="off"
         aria-label="code editor"
-        style={{ tabSize: 2 }}
+        style={{ tabSize: 2, padding: 12, paddingLeft: 60 }}
       />
     </div>
   );
