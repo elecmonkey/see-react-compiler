@@ -24,7 +24,10 @@ type OutMessage = {
 
 interface WorkerCtx {
   postMessage: (msg: OutMessage) => void;
-  addEventListener: (type: 'message', listener: (e: MessageEvent<InMessage>) => void) => void;
+  addEventListener: (
+    type: 'message',
+    listener: (e: MessageEvent<InMessage>) => void,
+  ) => void;
 }
 const ctx = self as unknown as WorkerCtx;
 
@@ -37,11 +40,15 @@ if (!('process' in g)) g.process = { env: {} };
 async function ensureLibs() {
   if (!BabelLib) {
     const m = await import('@babel/standalone');
-    BabelLib = ((m as unknown as { default?: BabelRuntime })?.default ?? (m as unknown as BabelRuntime));
+    BabelLib =
+      (m as unknown as { default?: BabelRuntime })?.default ??
+      (m as unknown as BabelRuntime);
   }
   if (!ReactCompilerLib) {
     const m = await import('babel-plugin-react-compiler');
-    ReactCompilerLib = ((m as unknown as { default?: unknown })?.default ?? (m as unknown as unknown));
+    ReactCompilerLib =
+      (m as unknown as { default?: unknown })?.default ??
+      (m as unknown as unknown);
   }
 }
 
@@ -64,7 +71,8 @@ ctx.addEventListener('message', async (e: MessageEvent<InMessage>) => {
       sourceFileName: filename,
     });
     result = r.code || '';
-    map = (r as unknown as { map?: string | Record<string, unknown> }).map || null;
+    map =
+      (r as unknown as { map?: string | Record<string, unknown> }).map || null;
   } catch (err) {
     error = String(err);
   }

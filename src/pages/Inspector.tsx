@@ -19,9 +19,16 @@ const Inspector = () => {
   const [filename, setFilename] = useState<string>('Demo.tsx');
   const workerRef = useRef<Worker | null>(null);
   const [compiling, setCompiling] = useState<boolean>(false);
-  const [originPos, setOriginPos] = useState<{ line: number; column: number } | null>(null);
+  const [originPos, setOriginPos] = useState<{
+    line: number;
+    column: number;
+  } | null>(null);
   const [mappedLine, setMappedLine] = useState<number | null>(null);
-  const [reverseMappedPos, setReverseMappedPos] = useState<Array<{ line: number; column: number; endColumn: number }> | null>(null);
+  const [reverseMappedPos, setReverseMappedPos] = useState<Array<{
+    line: number;
+    column: number;
+    endColumn: number;
+  }> | null>(null);
 
   const runCompile = useCallback(
     (src: string) => {
@@ -33,9 +40,19 @@ const Inspector = () => {
   );
 
   useEffect(() => {
-    const w = new Worker(new URL('../workers/compiler.worker.ts', import.meta.url), { type: 'module' });
+    const w = new Worker(
+      new URL('../workers/compiler.worker.ts', import.meta.url),
+      { type: 'module' },
+    );
     workerRef.current = w;
-    const handler = (e: MessageEvent<{ code: string | null; error: string | null; time: number; map: string | Record<string, unknown> | null }>) => {
+    const handler = (
+      e: MessageEvent<{
+        code: string | null;
+        error: string | null;
+        time: number;
+        map: string | Record<string, unknown> | null;
+      }>,
+    ) => {
       setCompiling(false);
       setTime(e.data.time);
       setError(e.data.error);
@@ -70,10 +87,24 @@ const Inspector = () => {
     () => (
       <div className="grid grid-cols-[minmax(320px,1fr)_minmax(480px,1.2fr)] gap-4 p-4">
         <div className="rounded-lg border border-neutral-200 bg-white shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
-          <EditorPane value={code} onChange={setCode} language="typescript" onSelectionChange={(line, column) => setOriginPos({ line, column })} highlightRanges={reverseMappedPos} />
+          <EditorPane
+            value={code}
+            onChange={setCode}
+            language="typescript"
+            onSelectionChange={(line, column) => setOriginPos({ line, column })}
+            highlightRanges={reverseMappedPos}
+          />
         </div>
         <div className="rounded-lg border border-neutral-200 bg-white shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
-          <OutputPane code={compiled} language="tsx" map={map} sourceFile={filename} origin={originPos || undefined} onMappedLineChange={setMappedLine} onOriginalRangesChange={setReverseMappedPos} />
+          <OutputPane
+            code={compiled}
+            language="tsx"
+            map={map}
+            sourceFile={filename}
+            origin={originPos || undefined}
+            onMappedLineChange={setMappedLine}
+            onOriginalRangesChange={setReverseMappedPos}
+          />
         </div>
       </div>
     ),
@@ -88,7 +119,12 @@ const Inspector = () => {
         onCompile={() => runCompile(code)}
       />
       {layout}
-      <StatusBar compiling={compiling} timeMs={time} error={error} mappedLine={mappedLine} />
+      <StatusBar
+        compiling={compiling}
+        timeMs={time}
+        error={error}
+        mappedLine={mappedLine}
+      />
     </div>
   );
 };
