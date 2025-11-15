@@ -7,10 +7,10 @@ type Props = {
   sourceFile?: string;
   origin?: { line: number; column: number };
   onMappedLineChange?: (line: number | null) => void;
-  onOriginalPosChange?: (pos: { line: number; column: number } | null) => void;
+  onOriginalRangesChange?: (ranges: Array<{ line: number; column: number; endColumn: number }> | null) => void;
 };
 
-const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, onMappedLineChange, onOriginalPosChange }: Props) => {
+const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, onMappedLineChange, onOriginalRangesChange }: Props) => {
   const [html, setHtml] = useState<string>('');
   const lines = useMemo(() => ((code || '').split('\n').length || 1), [code]);
   const [genLine, setGenLine] = useState<number | null>(null);
@@ -50,16 +50,52 @@ const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, on
         console.log('[SourceMap] Generated position:', pos);
         const nextLine = pos.line || null;
 
-        // 反向映射：从生成代码位置映射回源码位置
+        // 反向映射：从生成代码的整行映射回源码
         if (nextLine && pos.column !== null) {
-          const originalPos = consumer.originalPositionFor({ line: nextLine, column: pos.column });
-          console.log('[SourceMap] Reverse mapped original position:', originalPos);
-          if (!disposed && originalPos.line && originalPos.column !== null && onOriginalPosChange) {
-            onOriginalPosChange({ line: originalPos.line, column: originalPos.column });
+          const genLineText = code.split('\n')[nextLine - 1] || '';
+          console.log('[SourceMap] Reverse mapping entire generated line:', nextLine);
+
+          // 存储所有映射的源码片段
+          const ranges: Array<{ line: number; column: number; endColumn: number }> = [];
+          let currentRange: { line: number; column: number; endColumn: number } | null = null;
+
+          // 遍历生成代码行的每一列
+          for (let col = 0; col < genLineText.length; col++) {
+            const originalPos = consumer.originalPositionFor({ line: nextLine, column: col });
+
+            if (originalPos.line && originalPos.column !== null && originalPos.source === sourceFile) {
+              if (!currentRange || currentRange.line !== originalPos.line || currentRange.endColumn !== originalPos.column) {
+                // 开始新的范围
+                if (currentRange) {
+                  ranges.push(currentRange);
+                }
+                currentRange = { line: originalPos.line, column: originalPos.column, endColumn: originalPos.column + 1 };
+              } else {
+                // 扩展当前范围
+                currentRange.endColumn = originalPos.column + 1;
+              }
+            } else {
+              // 非映射位置，结束当前范围
+              if (currentRange) {
+                ranges.push(currentRange);
+                currentRange = null;
+              }
+            }
+          }
+
+          // 添加最后一个范围
+          if (currentRange) {
+            ranges.push(currentRange);
+          }
+
+          console.log('[SourceMap] Mapped ranges from generated line:', ranges);
+
+          if (!disposed && onOriginalRangesChange) {
+            onOriginalRangesChange(ranges.length > 0 ? ranges : null);
           }
         } else {
-          if (!disposed && onOriginalPosChange) {
-            onOriginalPosChange(null);
+          if (!disposed && onOriginalRangesChange) {
+            onOriginalRangesChange(null);
           }
         }
 
@@ -72,7 +108,7 @@ const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, on
         if (!disposed) {
           setGenLine(null);
           if (onMappedLineChange) onMappedLineChange(null);
-          if (onOriginalPosChange) onOriginalPosChange(null);
+          if (onOriginalRangesChange) onOriginalRangesChange(null);
         }
       }
     };
@@ -80,7 +116,7 @@ const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, on
     return () => {
       disposed = true;
     };
-  }, [map, origin, sourceFile, onMappedLineChange, onOriginalPosChange]);
+  }, [map, origin, sourceFile, onMappedLineChange, onOriginalRangesChange]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-auto code-output font-mono text-[13px] leading-[1.6]" style={{ padding: 12, paddingLeft: 60 }}>
