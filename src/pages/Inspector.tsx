@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import EditorPane from '../components/EditorPane';
 import OutputPane from '../components/OutputPane';
 import HeaderBar from '../components/HeaderBar';
@@ -16,15 +16,17 @@ const Inspector = () => {
   const [error, setError] = useState<string | null>(null);
   const [time, setTime] = useState<number>(0);
   const [filename, setFilename] = useState<string>('Demo.tsx');
-  const [dark, setDark] = useState<boolean>(false);
   const workerRef = useRef<Worker | null>(null);
   const [compiling, setCompiling] = useState<boolean>(false);
 
-  const runCompile = (src: string) => {
-    if (!workerRef.current) return;
-    setCompiling(true);
-    workerRef.current.postMessage({ code: src, filename, options: {} });
-  };
+  const runCompile = useCallback(
+    (src: string) => {
+      if (!workerRef.current) return;
+      setCompiling(true);
+      workerRef.current.postMessage({ code: src, filename, options: {} });
+    },
+    [filename],
+  );
 
   useEffect(() => {
     const w = new Worker(new URL('../workers/compiler.worker.ts', import.meta.url), { type: 'module' });
@@ -36,7 +38,6 @@ const Inspector = () => {
       setCompiled(e.data.code || '');
     };
     w.addEventListener('message', handler);
-    w.postMessage({ code, filename, options: {} });
     return () => {
       w.removeEventListener('message', handler);
       w.terminate();
@@ -58,30 +59,28 @@ const Inspector = () => {
         debouncedCompile.current = null;
       }
     };
-  }, [code, filename]);
+  }, [code, runCompile]);
 
   const layout = useMemo(
     () => (
       <div className="grid grid-cols-[minmax(320px,1fr)_minmax(480px,1.2fr)] gap-4 p-4">
-        <div className="rounded-lg border bg-white dark:bg-neutral-950 shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
-          <EditorPane value={code} onChange={setCode} language="typescript" dark={dark} />
+        <div className="rounded-lg border border-neutral-200 bg-white shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
+          <EditorPane value={code} onChange={setCode} language="typescript" />
         </div>
-        <div className="rounded-lg border bg-white dark:bg-neutral-950 shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
-          <OutputPane code={compiled} language="tsx" dark={dark} />
+        <div className="rounded-lg border border-neutral-200 bg-white shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
+          <OutputPane code={compiled} language="tsx" />
         </div>
       </div>
     ),
-    [code, compiled, dark],
+    [code, compiled],
   );
 
   return (
-    <div className={dark ? 'dark' : ''}>
+    <div>
       <HeaderBar
         filename={filename}
         onFilenameChange={setFilename}
         onCompile={() => runCompile(code)}
-        dark={dark}
-        onToggleDark={() => setDark((v) => !v)}
       />
       {layout}
       <StatusBar compiling={compiling} timeMs={time} error={error} />

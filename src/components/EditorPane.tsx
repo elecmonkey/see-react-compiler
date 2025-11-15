@@ -4,10 +4,9 @@ type Props = {
   value: string;
   onChange: (v: string) => void;
   language?: string;
-  dark?: boolean;
 };
 
-const EditorPane = ({ value, onChange, language = 'tsx', dark = false }: Props) => {
+const EditorPane = ({ value, onChange, language = 'tsx' }: Props) => {
   const [html, setHtml] = useState('');
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   const preRef = useRef<HTMLDivElement | null>(null);
@@ -18,8 +17,7 @@ const EditorPane = ({ value, onChange, language = 'tsx', dark = false }: Props) 
     const update = async () => {
       try {
         const shiki = await import('shiki');
-        const theme = dark ? 'github-dark' : 'github-light';
-        const h = await shiki.codeToHtml(value || '', { lang: language, theme });
+        const h = await shiki.codeToHtml(value || '', { lang: language, theme: 'github-light' });
         if (!disposed) setHtml(h);
       } catch {
         if (!disposed) setHtml(`<pre class="p-3">${value}</pre>`);
@@ -30,7 +28,7 @@ const EditorPane = ({ value, onChange, language = 'tsx', dark = false }: Props) 
       disposed = true;
       if (timer) window.clearTimeout(timer);
     };
-  }, [value, language, dark]);
+  }, [value, language]);
 
   useEffect(() => {
     const ta = taRef.current;

@@ -3,10 +3,9 @@ import { useEffect, useState } from 'react';
 type Props = {
   code: string;
   language?: string;
-  dark?: boolean;
 };
 
-const OutputPane = ({ code, language = 'tsx', dark = false }: Props) => {
+const OutputPane = ({ code, language = 'tsx' }: Props) => {
   const [html, setHtml] = useState<string>('');
 
   useEffect(() => {
@@ -14,8 +13,7 @@ const OutputPane = ({ code, language = 'tsx', dark = false }: Props) => {
     const run = async () => {
       try {
         const shiki = await import('shiki');
-        const theme = dark ? 'github-dark' : 'github-light';
-        const h = await shiki.codeToHtml(code || '', { lang: language, theme });
+        const h = await shiki.codeToHtml(code || '', { lang: language, theme: 'github-light' });
         if (active) setHtml(h);
       } catch {
         if (active) setHtml(`<pre class="p-3">${code}</pre>`);
@@ -25,7 +23,7 @@ const OutputPane = ({ code, language = 'tsx', dark = false }: Props) => {
     return () => {
       active = false;
     };
-  }, [code, language, dark]);
+  }, [code, language]);
 
   return (
     <div className="w-full h-full overflow-auto">
