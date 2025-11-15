@@ -26,8 +26,8 @@ const OutputPane = ({ code, language = 'tsx' }: Props) => {
   }, [code, language]);
 
   return (
-    <div className="w-full h-full overflow-auto">
-      <div className="shiki" dangerouslySetInnerHTML={{ __html: html }} />
+    <div className="w-full h-full overflow-auto code-output p-3 font-mono text-[13px] leading-[1.6]">
+      <div dangerouslySetInnerHTML={{ __html: html }} />
     </div>
   );
 };
