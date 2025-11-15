@@ -1,0 +1,92 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import EditorPane from '../components/EditorPane';
+import OutputPane from '../components/OutputPane';
+import HeaderBar from '../components/HeaderBar';
+import StatusBar from '../components/StatusBar';
+
+const DEFAULT_CODE = `import React, { useState } from 'react';
+export const Demo = () => {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(count + 1)}>Count: {count}</button>;
+};`;
+
+const Inspector = () => {
+  const [code, setCode] = useState<string>(DEFAULT_CODE);
+  const [compiled, setCompiled] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [time, setTime] = useState<number>(0);
+  const [filename, setFilename] = useState<string>('Demo.tsx');
+  const [dark, setDark] = useState<boolean>(false);
+  const workerRef = useRef<Worker | null>(null);
+  const [compiling, setCompiling] = useState<boolean>(false);
+
+  const runCompile = (src: string) => {
+    if (!workerRef.current) return;
+    setCompiling(true);
+    workerRef.current.postMessage({ code: src, filename, options: {} });
+  };
+
+  useEffect(() => {
+    const w = new Worker(new URL('../workers/compiler.worker.ts', import.meta.url), { type: 'module' });
+    workerRef.current = w;
+    const handler = (e: MessageEvent<{ code: string | null; error: string | null; time: number }>) => {
+      setCompiling(false);
+      setTime(e.data.time);
+      setError(e.data.error);
+      setCompiled(e.data.code || '');
+    };
+    w.addEventListener('message', handler);
+    w.postMessage({ code, filename, options: {} });
+    return () => {
+      w.removeEventListener('message', handler);
+      w.terminate();
+      workerRef.current = null;
+    };
+  }, []);
+
+  const debouncedCompile = useRef<number | null>(null);
+  useEffect(() => {
+    if (debouncedCompile.current) {
+      window.clearTimeout(debouncedCompile.current);
+    }
+    debouncedCompile.current = window.setTimeout(() => {
+      runCompile(code);
+    }, 500);
+    return () => {
+      if (debouncedCompile.current) {
+        window.clearTimeout(debouncedCompile.current);
+        debouncedCompile.current = null;
+      }
+    };
+  }, [code, filename]);
+
+  const layout = useMemo(
+    () => (
+      <div className="grid grid-cols-[minmax(320px,1fr)_minmax(480px,1.2fr)] gap-4 p-4">
+        <div className="rounded-lg border bg-white dark:bg-neutral-950 shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
+          <EditorPane value={code} onChange={setCode} language="typescript" dark={dark} />
+        </div>
+        <div className="rounded-lg border bg-white dark:bg-neutral-950 shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
+          <OutputPane code={compiled} language="tsx" dark={dark} />
+        </div>
+      </div>
+    ),
+    [code, compiled, dark],
+  );
+
+  return (
+    <div className={dark ? 'dark' : ''}>
+      <HeaderBar
+        filename={filename}
+        onFilenameChange={setFilename}
+        onCompile={() => runCompile(code)}
+        dark={dark}
+        onToggleDark={() => setDark((v) => !v)}
+      />
+      {layout}
+      <StatusBar compiling={compiling} timeMs={time} error={error} />
+    </div>
+  );
+};
+
+export default Inspector;
