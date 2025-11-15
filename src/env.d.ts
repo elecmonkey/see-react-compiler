@@ -11,4 +11,5 @@ declare module '*.svg?react' {
 }
 
 declare module '@babel/standalone';
+declare module 'source-map-js';
 declare module '*.css';

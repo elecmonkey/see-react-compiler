@@ -19,6 +19,7 @@ type OutMessage = {
   code: string | null;
   error: string | null;
   time: number;
+  map: string | Record<string, unknown> | null;
 };
 
 interface WorkerCtx {
@@ -49,6 +50,7 @@ ctx.addEventListener('message', async (e: MessageEvent<InMessage>) => {
   const start = performance.now();
   let result: string | null = null;
   let error: string | null = null;
+  let map: string | Record<string, unknown> | null = null;
   try {
     await ensureLibs();
     if (!BabelLib || !BabelLib.transform) {
@@ -58,13 +60,15 @@ ctx.addEventListener('message', async (e: MessageEvent<InMessage>) => {
       filename,
       plugins: [[ReactCompilerLib as object, options || {}]],
       parserOpts: { sourceType: 'module', plugins: ['jsx', 'typescript'] },
-      generatorOpts: { retainLines: true },
+      sourceMaps: true,
+      sourceFileName: filename,
     });
     result = r.code || '';
+    map = (r as unknown as { map?: string | Record<string, unknown> }).map || null;
   } catch (err) {
     error = String(err);
   }
   const end = performance.now();
-  const msg: OutMessage = { code: result, error, time: end - start };
+  const msg: OutMessage = { code: result, error, time: end - start, map };
   ctx.postMessage(msg);
 });

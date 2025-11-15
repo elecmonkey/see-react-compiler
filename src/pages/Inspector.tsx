@@ -13,11 +13,14 @@ export const Demo = () => {
 const Inspector = () => {
   const [code, setCode] = useState<string>(DEFAULT_CODE);
   const [compiled, setCompiled] = useState<string>('');
+  const [map, setMap] = useState<string | Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [time, setTime] = useState<number>(0);
   const [filename, setFilename] = useState<string>('Demo.tsx');
   const workerRef = useRef<Worker | null>(null);
   const [compiling, setCompiling] = useState<boolean>(false);
+  const [originPos, setOriginPos] = useState<{ line: number; column: number } | null>(null);
+  const [mappedLine, setMappedLine] = useState<number | null>(null);
 
   const runCompile = useCallback(
     (src: string) => {
@@ -31,11 +34,12 @@ const Inspector = () => {
   useEffect(() => {
     const w = new Worker(new URL('../workers/compiler.worker.ts', import.meta.url), { type: 'module' });
     workerRef.current = w;
-    const handler = (e: MessageEvent<{ code: string | null; error: string | null; time: number }>) => {
+    const handler = (e: MessageEvent<{ code: string | null; error: string | null; time: number; map: string | Record<string, unknown> | null }>) => {
       setCompiling(false);
       setTime(e.data.time);
       setError(e.data.error);
       setCompiled(e.data.code || '');
+      setMap(e.data.map || null);
     };
     w.addEventListener('message', handler);
     return () => {
@@ -65,25 +69,25 @@ const Inspector = () => {
     () => (
       <div className="grid grid-cols-[minmax(320px,1fr)_minmax(480px,1.2fr)] gap-4 p-4">
         <div className="rounded-lg border border-neutral-200 bg-white shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
-          <EditorPane value={code} onChange={setCode} language="typescript" />
+          <EditorPane value={code} onChange={setCode} language="typescript" onSelectionChange={(line, column) => setOriginPos({ line, column })} />
         </div>
         <div className="rounded-lg border border-neutral-200 bg-white shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
-          <OutputPane code={compiled} language="tsx" />
+          <OutputPane code={compiled} language="tsx" map={map} sourceFile={filename} origin={originPos || undefined} onMappedLineChange={setMappedLine} />
         </div>
       </div>
     ),
-    [code, compiled],
+    [code, compiled, filename, map, originPos],
   );
 
   return (
-    <div>
+    <div className="pb-12">
       <HeaderBar
         filename={filename}
         onFilenameChange={setFilename}
         onCompile={() => runCompile(code)}
       />
       {layout}
-      <StatusBar compiling={compiling} timeMs={time} error={error} />
+      <StatusBar compiling={compiling} timeMs={time} error={error} mappedLine={mappedLine} />
     </div>
   );
 };

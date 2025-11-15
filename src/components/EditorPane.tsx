@@ -4,9 +4,10 @@ type Props = {
   value: string;
   onChange: (v: string) => void;
   language?: string;
+  onSelectionChange?: (line: number, column: number) => void;
 };
 
-const EditorPane = ({ value, onChange, language = 'tsx' }: Props) => {
+const EditorPane = ({ value, onChange, language = 'tsx', onSelectionChange }: Props) => {
   const [html, setHtml] = useState('');
   const [lines, setLines] = useState<number>(1);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
@@ -74,7 +75,47 @@ const EditorPane = ({ value, onChange, language = 'tsx' }: Props) => {
         ref={taRef}
         className="absolute inset-0 w-full h-full resize-none outline-none font-mono text-[13px] leading-[1.6] bg-transparent caret-blue-600 text-transparent"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          onChange(e.target.value);
+          const ta = taRef.current;
+          if (!ta || !onSelectionChange) return;
+          const idx = ta.selectionStart || 0;
+          const before = (e.target.value || '').slice(0, idx);
+          const parts = before.split('\n');
+          const line = parts.length;
+          const column = parts[parts.length - 1].length;
+          onSelectionChange(line, column);
+        }}
+        onSelect={() => {
+          const ta = taRef.current;
+          if (!ta || !onSelectionChange) return;
+          const idx = ta.selectionStart || 0;
+          const before = (ta.value || '').slice(0, idx);
+          const parts = before.split('\n');
+          const line = parts.length;
+          const column = parts[parts.length - 1].length;
+          onSelectionChange(line, column);
+        }}
+        onKeyUp={() => {
+          const ta = taRef.current;
+          if (!ta || !onSelectionChange) return;
+          const idx = ta.selectionStart || 0;
+          const before = (ta.value || '').slice(0, idx);
+          const parts = before.split('\n');
+          const line = parts.length;
+          const column = parts[parts.length - 1].length;
+          onSelectionChange(line, column);
+        }}
+        onClick={() => {
+          const ta = taRef.current;
+          if (!ta || !onSelectionChange) return;
+          const idx = ta.selectionStart || 0;
+          const before = (ta.value || '').slice(0, idx);
+          const parts = before.split('\n');
+          const line = parts.length;
+          const column = parts[parts.length - 1].length;
+          onSelectionChange(line, column);
+        }}
         wrap="off"
         spellCheck={false}
         autoCorrect="off"
