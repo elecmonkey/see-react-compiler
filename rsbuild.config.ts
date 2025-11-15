@@ -5,6 +5,9 @@ import { pluginNodePolyfill } from '@rsbuild/plugin-node-polyfill';
 
 // Docs: https://rsbuild.rs/config/
 export default defineConfig({
+  html: {
+    title: 'See React Compiler',
+  },
   plugins: [
     pluginReact(),
     pluginNodePolyfill(),

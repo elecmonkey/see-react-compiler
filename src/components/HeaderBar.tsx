@@ -29,7 +29,7 @@ const HeaderBar = ({ filename, onFilenameChange, onCompile }: Props) => {
       </div>
       <div className="flex items-center gap-2">
         <a
-          href="https://www.elecmonkey.com"
+          href="https://www.elecmonkey.com/blog/see-react-compiler/"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-9 h-9 rounded-md hover:bg-neutral-200 transition-colors"
