@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import BlogIcon from './BlogIcon';
+import GitHubIcon from './GitHubIcon';
 
 type Props = {
   filename: string;
@@ -7,7 +9,7 @@ type Props = {
 };
 
 const HeaderBar = ({ filename, onFilenameChange, onCompile }: Props) => {
-  const title = useMemo(() => 'React Compiler Inspector', []);
+  const title = useMemo(() => 'See React Compiler', []);
   return (
     <div className="flex items-center justify-between px-4 h-12 border-b border-neutral-200 bg-neutral-50">
       <div className="flex items-center gap-3">
@@ -25,7 +27,28 @@ const HeaderBar = ({ filename, onFilenameChange, onCompile }: Props) => {
           Compile
         </button>
       </div>
-      <div className="flex items-center gap-2" />
+      <div className="flex items-center gap-2">
+        <a
+          href="https://www.elecmonkey.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center w-9 h-9 rounded-md hover:bg-neutral-200 transition-colors"
+          aria-label="Visit Blog"
+          title="My Blog (Chinese)"
+        >
+          <BlogIcon className="text-neutral-700" />
+        </a>
+        <a
+          href="https://github.com/elecmonkey/see-react-compiler"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center w-9 h-9 rounded-md hover:bg-neutral-200 transition-colors"
+          aria-label="View on GitHub"
+          title="GitHub Repo"
+        >
+          <GitHubIcon className="text-neutral-700" />
+        </a>
+      </div>
     </div>
   );
 };
