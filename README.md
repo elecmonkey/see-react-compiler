@@ -1,36 +1,29 @@
-# Rsbuild project
+# See React Compiler
 
-## Setup
+An interactive inspector for visualizing React Compiler transformations with real-time source mapping. Run Babel and React Compiler in browser.
 
-Install the dependencies:
+## Quick Start
 
 ```bash
 pnpm install
-```
-
-## Get started
-
-Start the dev server, and the app will be available at [http://localhost:3000](http://localhost:3000).
-
-```bash
 pnpm dev
 ```
 
-Build the app for production:
+Visit [http://localhost:3000](http://localhost:3000)
+
+## Usage
+
+1. Edit React code in the left panel
+2. See compiled output in the right panel
+3. Click any line to see source mapping
+4. View highlighted code ranges across both panels
+
+## Build
 
 ```bash
 pnpm build
 ```
 
-Preview the production build locally:
+## License
 
-```bash
-pnpm preview
-```
-
-## Learn more
-
-To learn more about Rsbuild, check out the following resources:
-
-- [Rsbuild documentation](https://rsbuild.rs) - explore Rsbuild features and APIs.
-- [Rsbuild GitHub repository](https://github.com/web-infra-dev/rsbuild) - your feedback and contributions are welcome!
+MIT
