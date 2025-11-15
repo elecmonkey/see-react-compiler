@@ -21,6 +21,7 @@ const Inspector = () => {
   const [compiling, setCompiling] = useState<boolean>(false);
   const [originPos, setOriginPos] = useState<{ line: number; column: number } | null>(null);
   const [mappedLine, setMappedLine] = useState<number | null>(null);
+  const [reverseMappedPos, setReverseMappedPos] = useState<{ line: number; column: number } | null>(null);
 
   const runCompile = useCallback(
     (src: string) => {
@@ -69,14 +70,14 @@ const Inspector = () => {
     () => (
       <div className="grid grid-cols-[minmax(320px,1fr)_minmax(480px,1.2fr)] gap-4 p-4">
         <div className="rounded-lg border border-neutral-200 bg-white shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
-          <EditorPane value={code} onChange={setCode} language="typescript" onSelectionChange={(line, column) => setOriginPos({ line, column })} />
+          <EditorPane value={code} onChange={setCode} language="typescript" onSelectionChange={(line, column) => setOriginPos({ line, column })} highlightPos={reverseMappedPos} />
         </div>
         <div className="rounded-lg border border-neutral-200 bg-white shadow-sm min-h-[480px] h-[calc(100vh-9rem)]">
-          <OutputPane code={compiled} language="tsx" map={map} sourceFile={filename} origin={originPos || undefined} onMappedLineChange={setMappedLine} />
+          <OutputPane code={compiled} language="tsx" map={map} sourceFile={filename} origin={originPos || undefined} onMappedLineChange={setMappedLine} onOriginalPosChange={setReverseMappedPos} />
         </div>
       </div>
     ),
-    [code, compiled, filename, map, originPos],
+    [code, compiled, filename, map, originPos, reverseMappedPos],
   );
 
   return (

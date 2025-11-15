@@ -7,9 +7,10 @@ type Props = {
   sourceFile?: string;
   origin?: { line: number; column: number };
   onMappedLineChange?: (line: number | null) => void;
+  onOriginalPosChange?: (pos: { line: number; column: number } | null) => void;
 };
 
-const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, onMappedLineChange }: Props) => {
+const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, onMappedLineChange, onOriginalPosChange }: Props) => {
   const [html, setHtml] = useState<string>('');
   const lines = useMemo(() => ((code || '').split('\n').length || 1), [code]);
   const [genLine, setGenLine] = useState<number | null>(null);
@@ -48,6 +49,20 @@ const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, on
         const pos = consumer.generatedPositionFor({ source: sourceFile, line: origin.line, column: origin.column });
         console.log('[SourceMap] Generated position:', pos);
         const nextLine = pos.line || null;
+
+        // 反向映射：从生成代码位置映射回源码位置
+        if (nextLine && pos.column !== null) {
+          const originalPos = consumer.originalPositionFor({ line: nextLine, column: pos.column });
+          console.log('[SourceMap] Reverse mapped original position:', originalPos);
+          if (!disposed && originalPos.line && originalPos.column !== null && onOriginalPosChange) {
+            onOriginalPosChange({ line: originalPos.line, column: originalPos.column });
+          }
+        } else {
+          if (!disposed && onOriginalPosChange) {
+            onOriginalPosChange(null);
+          }
+        }
+
         if (!disposed) {
           setGenLine(nextLine);
           if (onMappedLineChange) onMappedLineChange(nextLine);
@@ -57,6 +72,7 @@ const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, on
         if (!disposed) {
           setGenLine(null);
           if (onMappedLineChange) onMappedLineChange(null);
+          if (onOriginalPosChange) onOriginalPosChange(null);
         }
       }
     };
@@ -64,7 +80,7 @@ const OutputPane = ({ code, language = 'tsx', map = null, sourceFile, origin, on
     return () => {
       disposed = true;
     };
-  }, [map, origin, sourceFile, onMappedLineChange]);
+  }, [map, origin, sourceFile, onMappedLineChange, onOriginalPosChange]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-auto code-output font-mono text-[13px] leading-[1.6]" style={{ padding: 12, paddingLeft: 60 }}>

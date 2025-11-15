@@ -5,9 +5,10 @@ type Props = {
   onChange: (v: string) => void;
   language?: string;
   onSelectionChange?: (line: number, column: number) => void;
+  highlightPos?: { line: number; column: number } | null;
 };
 
-const EditorPane = ({ value, onChange, language = 'tsx', onSelectionChange }: Props) => {
+const EditorPane = ({ value, onChange, language = 'tsx', onSelectionChange, highlightPos }: Props) => {
   const [html, setHtml] = useState('');
   const [lines, setLines] = useState<number>(1);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
@@ -61,9 +62,12 @@ const EditorPane = ({ value, onChange, language = 'tsx', onSelectionChange }: Pr
         style={{ width: 48, paddingTop: 12, paddingLeft: 12, paddingRight: 8 }}
       >
         {Array.from({ length: lines }).map((_, i) => (
-          <div key={i}>{i + 1}</div>
+          <div key={i} style={{ color: highlightPos?.line === i + 1 ? '#d97706' : undefined }}>{i + 1}</div>
         ))}
       </div>
+      {highlightPos ? (
+        <div className="absolute left-[60px] right-0" style={{ top: 12 + (highlightPos.line - 1) * 20.8, height: 20.8, background: 'rgba(255,235,59,0.25)', zIndex: 1, pointerEvents: 'none' }} />
+      ) : null}
       <div
         ref={preRef}
         className="absolute inset-0 overflow-auto pointer-events-none editor-overlay font-mono text-[13px] leading-[1.6]"
